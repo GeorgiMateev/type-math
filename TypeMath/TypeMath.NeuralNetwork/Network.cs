@@ -26,10 +26,16 @@ namespace TypeMath.NeuralNetwork
         public void Train(IEnumerable<double> dataEntry, double learningConst)
         {
             var attributes = dataEntry.Take(dataEntry.Count() - 1);
-            var attrVector = Vector<double>.Build.DenseOfEnumerable(attributes);
+            var expectedClass = (int)dataEntry.Last();
+
+            this.Train(attributes, expectedClass, learningConst);
+        }
+
+        public void Train(IEnumerable<double> dataEntry, int expectedClass, double learningConst)
+        {
+            var attrVector = Vector<double>.Build.DenseOfEnumerable(dataEntry);
             this.Activate(attrVector);
 
-            var expectedClass = (int)dataEntry.Last();
             var expectedOutput = this.ExpectedOutput(expectedClass, this.activations[2].Count);
 
             var outputErrors = this.OutputErrors(expectedOutput);
@@ -37,7 +43,7 @@ namespace TypeMath.NeuralNetwork
 
             this.UpdateWeights(this.weights[1], activations[1], outputErrors, learningConst);
             this.UpdateWeights(this.weights[0], activations[0], hiddenLayerErrors, learningConst);
-        }
+        }        
 
         public void Train(IList<IEnumerable<double>> data, int iterations, double learningConst)
         {
@@ -46,6 +52,17 @@ namespace TypeMath.NeuralNetwork
                 foreach (var entry in data)
                 {
                     this.Train(entry, learningConst);
+                }
+            }
+        }
+
+        public void Train(IList<IEnumerable<double>> data, IList<int> labels, int iterations, double learningConst)
+        {
+            for (int i = 0; i < iterations; i++)
+            {
+                for (int j = 0; j < data.Count; j++)
+                {
+                    this.Train(data[j], labels[j], learningConst);
                 }
             }
         }
@@ -100,7 +117,7 @@ namespace TypeMath.NeuralNetwork
         private Vector<double> ExpectedOutput(int expectedClass, int outputNeurons)
         {
             var output = Vector<double>.Build.Sparse(outputNeurons);
-            output[expectedClass - 1] = 1.0;
+            output[expectedClass] = 1.0;
             return output;
         }
 
