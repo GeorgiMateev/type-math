@@ -1,0 +1,41 @@
+Test 1
+------
+Hidden layer neurons: 200
+Learning constant: 0.1
+Epochs: 1
+Samples: 59734
+Test samples: 10000
+Success rate: 0.9306
+Time: 
+
+
+Test 2
+------
+Hidden layer neurons: 10
+Learning constant: 0.1
+Epochs: 10
+Samples: 59734
+Test samples: 10000
+Success rate: 0.0113
+Time: 5m 58s
+
+
+Test 3
+------
+Hidden layer neurons: 30
+Learning constant: 3.0
+Epochs: 30
+Samples: 59734
+Test samples: 10000
+Success rate: 0.6976
+Time: 40m 47s
+
+Test 4
+------
+Hidden layer neurons: 200
+Learning constant: 3.0
+Epochs: 1
+Samples: 59734
+Test samples: 10000
+Success rate: 0.0892
+Time: 7m 52s

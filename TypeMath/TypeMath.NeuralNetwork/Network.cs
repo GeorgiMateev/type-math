@@ -24,6 +24,11 @@ namespace TypeMath.NeuralNetwork
         #endregion
 
         #region Public methods
+        /// <summary>
+        /// Train the network with single sample and learning constant.
+        /// </summary>
+        /// <param name="dataEntry">Contains the attributes of the sample and its class as a last element.</param>
+        /// <param name="learningConst">The learning rate.</param>
         public void Train(IEnumerable<double> dataEntry, double learningConst)
         {
             var attributes = dataEntry.Take(dataEntry.Count() - 1);
@@ -32,6 +37,12 @@ namespace TypeMath.NeuralNetwork
             this.Train(attributes, expectedClass, learningConst);
         }
 
+        /// <summary>
+        /// Train the network with single sample and learning constant.
+        /// </summary>
+        /// <param name="dataEntry">Contains the attributes of the sample.</param>
+        /// <param name="expectedClass">The class of the sample.</param>
+        /// <param name="learningConst">The learning rate.</param>
         public void Train(IEnumerable<double> dataEntry, int expectedClass, double learningConst)
         {
             var attrVector = Vector<double>.Build.DenseOfEnumerable(dataEntry);
@@ -46,8 +57,16 @@ namespace TypeMath.NeuralNetwork
             this.UpdateWeights(this.weights[0], activations[0], hiddenLayerErrors, learningConst);
         }        
 
+        /// <summary>
+        /// Train the network with given list of samples with classes, iterations and learing rate.
+        /// </summary>
+        /// <param name="data">List of training samples. Each sample should has its class as a last element.</param>
+        /// <param name="iterations">Number of training epochs.</param>
+        /// <param name="learningConst">The learning rate.</param>
         public void Train(IList<IEnumerable<double>> data, int iterations, double learningConst)
         {
+            this.Shuffle<IEnumerable<double>>(data);
+
             for (int i = 0; i < iterations; i++)
             {
                 foreach (var entry in data)
@@ -57,8 +76,17 @@ namespace TypeMath.NeuralNetwork
             }
         }
 
+        /// <summary>
+        /// Train the network with given list of samples, list with labels for each sample, iterations and learing rate.
+        /// </summary>
+        /// <param name="data">List of training samples.</param>
+        /// <param name="labels">List of labels for each sample.</param>
+        /// <param name="iterations">Number of training epochs.</param>
+        /// <param name="learningConst">The learning rate.</param>
         public void Train(IList<IEnumerable<double>> data, IList<int> labels, int iterations, double learningConst)
         {
+            this.Shuffle<IEnumerable<double>>(data);
+
             for (int i = 0; i < iterations; i++)
             {
                 for (int j = 0; j < data.Count; j++)
@@ -68,24 +96,50 @@ namespace TypeMath.NeuralNetwork
             }
         }
 
-        public void Train(StreamReader dataStream, StreamReader labelsStream, double learningConst)
+        /// <summary>
+        /// Train the network with given streams of training samples and labels.
+        /// </summary>
+        /// <param name="dataStream">Stream containing training samples.</param>
+        /// <param name="labelsStream">Stream containing labels for each sample.</param>
+        /// <param name="iterations">Number of epochs.</param>
+        /// <param name="learningConst">The learning rate.</param>
+        public void Train(StreamReader dataStream, StreamReader labelsStream, int iterations, double learningConst)
         {
+            var data = new List<IEnumerable<double>>();
+            var labels = new List<int>();
+
             string line;
             string label;
             while ((line = dataStream.ReadLine()) != null &&
                 (label = labelsStream.ReadLine()) != null)
             {
                 var input = line.Split(' ').Select(c => Double.Parse(c));
-                this.Train(input, int.Parse(label), learningConst);
+                var labelInt = int.Parse(label);
+
+                data.Add(input);
+                labels.Add(labelInt);
+
+                this.Train(input, labelInt, learningConst);
             }
+
+            this.Train(data, labels, iterations - 1, learningConst);
         }
 
+        /// <summary>
+        /// Returns the output layer of the network.
+        /// </summary>
+        /// <returns></returns>
         public Vector<double> GetOutput()
         {
             return this.activations.Last();
         }
 
-        public IList<double[]> ComputeData(IList<IEnumerable<double>> data)
+        /// <summary>
+        /// Classifies a list of samples.
+        /// </summary>
+        /// <param name="data">The samples that should be classified.</param>
+        /// <returns>List of network output layers for each test sample.</returns>
+        public IList<double[]> Classify(IList<IEnumerable<double>> data)
         {
             var results = new List<double[]>();
             foreach (var item in data)
@@ -152,6 +206,19 @@ namespace TypeMath.NeuralNetwork
         {
             weights.MapIndexedInplace(
                 (r, c, x) => x + learningConst * errors[r] * activations[c]);
+        }
+
+        private void Shuffle<T>(IList<T> list)
+        {
+            var random = new Random();
+            int n = list.Count;
+            for (int i = 0; i < n; i++)
+            {
+                int r = i + (int)(random.NextDouble() * (n - i));
+                T t = list[r];
+                list[r] = list[i];
+                list[i] = t;
+            }
         }
         #endregion
 

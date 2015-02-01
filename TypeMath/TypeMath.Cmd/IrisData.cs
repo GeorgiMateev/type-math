@@ -28,7 +28,7 @@ namespace TypeMath.Cmd
             var testCases = IrisData.ReadData(testFileName);
             var testResults = IrisData.ReadData(resultsFileName).Select(x => x.First()).ToList();
 
-            var result = net.ComputeData(testCases);
+            var result = net.Classify(testCases);
 
             for (int i = 0; i < testResults.Count; i++)
             {

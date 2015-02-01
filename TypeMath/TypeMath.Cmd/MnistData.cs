@@ -13,47 +13,66 @@ namespace TypeMath.Cmd
     {
         public async void Learn()
         {
+            var startTime = DateTime.Now;
+
             var trainDataFileName = "train-images.idx3-ubyte";
-            var trainDataLabels = "train-labels.idx1-ubyte";
+            var trainDataLabelsFileName = "train-labels.idx1-ubyte";
             StreamReader data = new StreamReader(new MemoryStream());
             var imageTask = MnistData.ReadImageDataAsync(trainDataFileName, data);
 
             StreamReader labels = new StreamReader(new MemoryStream());
-            var labelsTask = MnistData.ReadLabelsDataAsync(trainDataLabels, labels);
+            var labelsTask = MnistData.ReadLabelsDataAsync(trainDataLabelsFileName, labels);
            // var data = ReadImageData(trainDataFileName);
            // var labels = ReadLabelsData(trainDataLabels);
 
             var hiddenLayerNeurons = 200;
-            var iterations = 500;
+            var iterations = 10;
             var learningConst = 0.1;
             var net = new Network(784, 10, hiddenLayerNeurons);
-            net.Train(data, labels, learningConst);
+            net.Train(data, labels, iterations, learningConst);
 
             await imageTask;
             await labelsTask;
 
-            var testFileName = "t10k-images.idx3-ubyte";
-            var resultsFileName = "t10k-labels.idx1-ubyte";
+            var testDataFileName = "t10k-images.idx3-ubyte";
+            var testResultsFileName = "t10k-labels.idx1-ubyte";
 
-            var testCases = MnistData.ReadImageData(testFileName);
-            var testResults = MnistData.ReadLabelsData(resultsFileName);
+            var testData = MnistData.ReadImageData(testDataFileName);
+            var testDataResults = MnistData.ReadLabelsData(testResultsFileName);
 
-            var result = net.ComputeData(testCases);
+            var networkResults = net.Classify(testData);
 
-            for (int i = 0; i < testResults.Count; i++)
+            var endTime = DateTime.Now;
+
+            double successfullTests = 0;
+
+            for (int i = 0; i < testDataResults.Count; i++)
             {
                 double max = -1;
                 int maxIndex = -1;
-                for (int j = 0; j < result[i].Length; j++)
+                for (int j = 0; j < networkResults[i].Length; j++)
                 {
-                    if (result[i][j] > max)
+                    if (networkResults[i][j] > max)
                     {
-                        max = result[i][j];
+                        max = networkResults[i][j];
                         maxIndex = j;
                     }
                 }
-                Console.WriteLine("Expected: {0} Actual: {1} Output {2}", testResults[i], maxIndex + 1, max);
+                Console.WriteLine("Expected: {0} Actual: {1} Output {2}", testDataResults[i], maxIndex, max);
+
+                if (testDataResults[i] == maxIndex)
+                {
+                    successfullTests++;
+                }
             }
+
+            var time = endTime - startTime;
+
+            Console.WriteLine("Execution time: {0}m {1}s", time.Minutes, time.Seconds);
+
+            Console.WriteLine("Training samples: {0}", testData.Count);
+            Console.WriteLine("Successfull tests: {0}", successfullTests);
+            Console.WriteLine("Success rate: {0}", successfullTests / testData.Count);
         }
 
         private static List<IEnumerable<double>> ReadImageData(string fileName)
