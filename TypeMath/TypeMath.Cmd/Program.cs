@@ -17,7 +17,9 @@ namespace TypeMath.Cmd
             //iris.Learn();
 
             var mnist = new MnistData();
-            mnist.Learn();
+            Task task = new Task(mnist.Learn);
+            task.Start();
+            task.Wait();
         }        
     }
 }

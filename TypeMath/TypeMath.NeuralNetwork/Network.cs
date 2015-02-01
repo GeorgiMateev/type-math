@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -64,6 +65,18 @@ namespace TypeMath.NeuralNetwork
                 {
                     this.Train(data[j], labels[j], learningConst);
                 }
+            }
+        }
+
+        public void Train(StreamReader dataStream, StreamReader labelsStream, double learningConst)
+        {
+            string line;
+            string label;
+            while ((line = dataStream.ReadLine()) != null &&
+                (label = labelsStream.ReadLine()) != null)
+            {
+                var input = line.Split(' ').Select(c => Double.Parse(c));
+                this.Train(input, int.Parse(label), learningConst);
             }
         }
 

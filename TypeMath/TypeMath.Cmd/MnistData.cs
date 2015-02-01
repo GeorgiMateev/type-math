@@ -11,18 +11,26 @@ namespace TypeMath.Cmd
 {
     public class MnistData
     {
-        public void Learn()
+        public async void Learn()
         {
             var trainDataFileName = "train-images.idx3-ubyte";
             var trainDataLabels = "train-labels.idx1-ubyte";
-            var data = MnistData.ReadImageData(trainDataFileName);
-            var labels = MnistData.ReadLabelsData(trainDataLabels);
+            StreamReader data = new StreamReader(new MemoryStream());
+            var imageTask = MnistData.ReadImageDataAsync(trainDataFileName, data);
+
+            StreamReader labels = new StreamReader(new MemoryStream());
+            var labelsTask = MnistData.ReadLabelsDataAsync(trainDataLabels, labels);
+           // var data = ReadImageData(trainDataFileName);
+           // var labels = ReadLabelsData(trainDataLabels);
 
             var hiddenLayerNeurons = 200;
             var iterations = 500;
             var learningConst = 0.1;
             var net = new Network(784, 10, hiddenLayerNeurons);
-            net.Train(data, labels, iterations, learningConst);
+            net.Train(data, labels, learningConst);
+
+            await imageTask;
+            await labelsTask;
 
             var testFileName = "t10k-images.idx3-ubyte";
             var resultsFileName = "t10k-labels.idx1-ubyte";
@@ -74,8 +82,36 @@ namespace TypeMath.Cmd
                     data.Add(pixels);
                 }
             }
-
             return data;
+        }
+
+        private static async Task ReadImageDataAsync(string fileName, StreamReader data)
+        {
+            using (var fs = new FileStream(fileName, FileMode.Open))
+            {
+                var magicNumber = ReadLine(fs);
+                var numberOfImages = ReadLine(fs);
+                var numberOfRows = ReadLine(fs);
+                var numberOfColumns = ReadLine(fs);
+
+                var writer = new StreamWriter(data.BaseStream);
+
+                for (int i = 0; i < numberOfImages; i++)
+                {
+                    var numberOfPixels = numberOfRows * numberOfColumns;
+                    var line = new string[numberOfPixels];
+                    for (int j = 0; j < numberOfPixels; j++)
+                    {
+                        var pixel = fs.ReadByte();
+                        var inputData = pixel / 255.0d;
+                        line[j] = inputData.ToString();
+                    }
+                    
+                    await writer.WriteLineAsync(String.Join(" ", line));
+                }
+
+                data.BaseStream.Seek(0, SeekOrigin.Begin);
+            }
         }
 
         private static List<int> ReadLabelsData(string fileName)
@@ -95,6 +131,25 @@ namespace TypeMath.Cmd
             }
 
             return labels;
+        }
+
+        private static async Task ReadLabelsDataAsync(string fileName, StreamReader data)
+        {            
+            var writer = new StreamWriter(data.BaseStream);
+
+            using (var fs = new FileStream(fileName, FileMode.Open))
+            {
+                var magicNumber = ReadLine(fs);
+                var numberOfItems = ReadLine(fs);
+
+                for (int i = 0; i < numberOfItems; i++)
+                {
+                    var label = fs.ReadByte();
+                    await writer.WriteLineAsync(label.ToString());
+                }
+            }
+
+            data.BaseStream.Seek(0, SeekOrigin.Begin);
         }
 
         private static int ReadLine(FileStream fs)
