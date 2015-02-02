@@ -25,9 +25,9 @@ namespace TypeMath.Cmd
            // var data = ReadImageData(trainDataFileName);
            // var labels = ReadLabelsData(trainDataLabels);
 
-            var hiddenLayerNeurons = 200;
-            var iterations = 10;
-            var learningConst = 0.1;
+            var hiddenLayerNeurons = 300;
+            var iterations = 2;
+            var learningConst = 0.5;
             var net = new Network(784, 10, hiddenLayerNeurons);
             net.Train(data, labels, iterations, learningConst);
 

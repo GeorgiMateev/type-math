@@ -6,7 +6,7 @@ Epochs: 1
 Samples: 59734
 Test samples: 10000
 Success rate: 0.9306
-Time: 
+Time: 5m 56s
 
 
 Test 2
@@ -39,3 +39,83 @@ Samples: 59734
 Test samples: 10000
 Success rate: 0.0892
 Time: 7m 52s
+
+Test 5
+------
+Hidden layer neurons: 200
+Learning constant: 0.1
+Epochs: 20
+Samples: 59734
+Test samples: 10000
+Success rate: 0.1354
+Time: 53m 50s
+
+Test 6
+------
+Hidden layer neurons: 200
+Learning constant: 0.1
+Epochs: 2
+Samples: 59734
+Test samples: 10000
+Success rate: 0.9279
+Time: 10m 41s
+
+Test 7
+------
+Hidden layer neurons: 200
+Learning constant: 0.5
+Epochs: 1
+Samples: 59734
+Test samples: 10000
+Success rate: 0.9523
+Time: 5m 18s
+
+Test 8
+------
+Hidden layer neurons: 200
+Learning constant: 1.0
+Epochs: 1
+Samples: 59734
+Test samples: 10000
+Success rate: 0.9513
+Time: 5m 42s
+
+Test 9
+------
+Hidden layer neurons: 300
+Learning constant: 0.5
+Epochs: 1
+Samples: 59734
+Test samples: 10000
+Success rate: 0.9595
+Time: 8m 31s
+
+Test 10
+------
+Hidden layer neurons: 400
+Learning constant: 0.5
+Epochs: 1
+Samples: 59734
+Test samples: 10000
+Success rate: 0.9569
+Time: 10m 44s
+
+Test 11
+------
+Hidden layer neurons: 50
+Learning constant: 0.5
+Epochs: 5
+Samples: 59734
+Test samples: 10000
+Success rate: 0.1033
+Time: 8m 7s
+
+Test 12
+------
+Hidden layer neurons: 300
+Learning constant: 0.5
+Epochs: 2
+Samples: 59734
+Test samples: 10000
+Success rate: 0.6681
+Time: 18m 30s
