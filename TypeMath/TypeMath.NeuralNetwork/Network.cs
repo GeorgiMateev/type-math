@@ -103,7 +103,8 @@ namespace TypeMath.NeuralNetwork
         /// <param name="labelsStream">Stream containing labels for each sample.</param>
         /// <param name="iterations">Number of epochs.</param>
         /// <param name="learningConst">The learning rate.</param>
-        public void Train(StreamReader dataStream, StreamReader labelsStream, int iterations, double learningConst)
+        /// <param name="separationSymbol">The symbol used to separate the attributes of a line.</param>
+        public void Train(StreamReader dataStream, StreamReader labelsStream, int iterations, double learningConst, char separationSymbol)
         {
             var data = new List<IEnumerable<double>>();
             var labels = new List<int>();
@@ -113,7 +114,7 @@ namespace TypeMath.NeuralNetwork
             while ((line = dataStream.ReadLine()) != null &&
                 (label = labelsStream.ReadLine()) != null)
             {
-                var input = line.Split(' ').Select(c => Double.Parse(c));
+                var input = line.Split(separationSymbol).Select(c => Double.Parse(c));
                 var labelInt = int.Parse(label);
 
                 data.Add(input);

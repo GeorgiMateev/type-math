@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,21 +8,19 @@ using TypeMath.NeuralNetwork;
 
 namespace TypeMath.Cmd
 {
-    public class MnistData
+    class CrohmeData
     {
         public async void Learn()
         {
             var startTime = DateTime.Now;
 
-            var trainDataFileName = "train-images.idx3-ubyte";
-            var trainDataLabelsFileName = "train-labels.idx1-ubyte";
+            var trainDataFileName = "../../../data/crohme";
+            var trainDataLabelsFileName = "../../../data/crohme";
             StreamReader data = new StreamReader(new MemoryStream());
-            var imageTask = MnistData.ReadImageDataAsync(trainDataFileName, data);
+            var imageTask = CrohmeData.ReadImageDataAsync(trainDataFileName, data);
 
             StreamReader labels = new StreamReader(new MemoryStream());
-            var labelsTask = MnistData.ReadLabelsDataAsync(trainDataLabelsFileName, labels);
-           // var data = ReadImageData(trainDataFileName);
-           // var labels = ReadLabelsData(trainDataLabels);
+            var labelsTask = CrohmeData.ReadLabelsDataAsync(trainDataLabelsFileName, labels);
 
             var hiddenLayerNeurons = 300;
             var iterations = 2;
@@ -34,11 +31,11 @@ namespace TypeMath.Cmd
             await imageTask;
             await labelsTask;
 
-            var testDataFileName = "t10k-images.idx3-ubyte";
-            var testResultsFileName = "t10k-labels.idx1-ubyte";
+            var testDataFileName = "../../../data/crohme";
+            var testResultsFileName = "../../../data/crohme";
 
-            var testData = MnistData.ReadImageData(testDataFileName);
-            var testDataResults = MnistData.ReadLabelsData(testResultsFileName);
+            var testData = CrohmeData.ReadImageData(testDataFileName);
+            var testDataResults = CrohmeData.ReadLabelsData(testResultsFileName);
 
             var networkResults = net.Classify(testData);
 
@@ -125,7 +122,7 @@ namespace TypeMath.Cmd
                         var inputData = pixel / 255.0d;
                         line[j] = inputData.ToString();
                     }
-                    
+
                     await writer.WriteLineAsync(String.Join(" ", line));
                 }
 
@@ -153,7 +150,7 @@ namespace TypeMath.Cmd
         }
 
         private static async Task ReadLabelsDataAsync(string fileName, StreamReader data)
-        {            
+        {
             var writer = new StreamWriter(data.BaseStream);
 
             using (var fs = new FileStream(fileName, FileMode.Open))
