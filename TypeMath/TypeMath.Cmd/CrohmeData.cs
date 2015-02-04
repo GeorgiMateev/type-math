@@ -14,28 +14,29 @@ namespace TypeMath.Cmd
         {
             var startTime = DateTime.Now;
 
-            var trainDataFileName = "../../../data/crohme";
-            var trainDataLabelsFileName = "../../../data/crohme";
-            StreamReader data = new StreamReader(new MemoryStream());
-            var imageTask = CrohmeData.ReadImageDataAsync(trainDataFileName, data);
+            var trainDataFolder = "../../../data/crohme/train";
+            var testDataFolder = "../../../data/crohme/test";
 
-            StreamReader labels = new StreamReader(new MemoryStream());
-            var labelsTask = CrohmeData.ReadLabelsDataAsync(trainDataLabelsFileName, labels);
+            int? lastUsedClass = -1;
+            var labelRepresentations = new Dictionary<string, int>();
 
+            List<IEnumerable<double>> trainData;
+            List<int> trainLabels;
+            GetData(trainDataFolder, out trainData, out trainLabels,  labelRepresentations, ref lastUsedClass);
+            
             var hiddenLayerNeurons = 300;
             var iterations = 2;
             var learningConst = 0.5;
-            var net = new Network(784, 10, hiddenLayerNeurons);
-            net.Train(data, labels, iterations, learningConst, ' ');
 
-            await imageTask;
-            await labelsTask;
+            var inputNeurons = trainData[0].Count();
+            var outputNeurons = lastUsedClass.Value + 1;
+            var net = new Network(inputNeurons, outputNeurons, hiddenLayerNeurons);
+            net.Train(trainData, trainLabels, iterations, learningConst);
 
-            var testDataFileName = "../../../data/crohme";
-            var testResultsFileName = "../../../data/crohme";
-
-            var testData = CrohmeData.ReadImageData(testDataFileName);
-            var testDataResults = CrohmeData.ReadLabelsData(testResultsFileName);
+            List<IEnumerable<double>> testData;
+            List<int> testLabels;
+            int? lastClass = null;
+            GetData(testDataFolder, out testData, out testLabels, labelRepresentations, ref lastClass);
 
             var networkResults = net.Classify(testData);
 
@@ -43,7 +44,7 @@ namespace TypeMath.Cmd
 
             double successfullTests = 0;
 
-            for (int i = 0; i < testDataResults.Count; i++)
+            for (int i = 0; i < testLabels.Count; i++)
             {
                 double max = -1;
                 int maxIndex = -1;
@@ -55,9 +56,12 @@ namespace TypeMath.Cmd
                         maxIndex = j;
                     }
                 }
-                Console.WriteLine("Expected: {0} Actual: {1} Output {2}", testDataResults[i], maxIndex, max);
 
-                if (testDataResults[i] == maxIndex)
+                var testLabel = GetLabel(testLabels[i], labelRepresentations);
+                var recognizedLabel = GetLabel(maxIndex, labelRepresentations);
+                Console.WriteLine("Expected: {0} Actual: {1} Output {2}", testLabel, recognizedLabel, max);
+
+                if (testLabel == recognizedLabel)
                 {
                     successfullTests++;
                 }
@@ -67,110 +71,72 @@ namespace TypeMath.Cmd
 
             Console.WriteLine("Execution time: {0}m {1}s", time.Minutes, time.Seconds);
 
-            Console.WriteLine("Training samples: {0}", testData.Count);
+            Console.WriteLine("Training samples: {0}", trainData.Count);
             Console.WriteLine("Successfull tests: {0}", successfullTests);
             Console.WriteLine("Success rate: {0}", successfullTests / testData.Count);
         }
 
-        private static List<IEnumerable<double>> ReadImageData(string fileName)
+        private static void GetData(
+            string dataFolder,
+            out List<IEnumerable<double>> data,
+            out List<int> labels,
+            Dictionary<string, int> labelRepresentations,
+            ref int? lastUsedClass)
         {
-            var data = new List<IEnumerable<double>>();
+            data = new List<IEnumerable<double>>();
+            labels = new List<int>();
 
-            using (var fs = new FileStream(fileName, FileMode.Open))
+            var trainFiles = Directory.GetFiles(dataFolder);
+
+            foreach (var file in trainFiles)
             {
-                var magicNumber = ReadLine(fs);
-                var numberOfImages = ReadLine(fs);
-                var numberOfRows = ReadLine(fs);
-                var numberOfColumns = ReadLine(fs);
+                string label;
+                var trainSymbol = CrohmeData.GetTrainSymbol(file, out label);
+                var trainClass = CrohmeData.GetClass(label, labelRepresentations, ref lastUsedClass);
 
-                for (int i = 0; i < numberOfImages; i++)
-                {
-                    var pixels = new List<double>();
-                    var numberOfPixels = numberOfRows * numberOfColumns;
-
-                    for (int j = 0; j < numberOfPixels; j++)
-                    {
-                        var pixel = fs.ReadByte();
-                        var inputData = pixel / 255.0d;
-                        pixels.Add(inputData);
-                    }
-
-                    data.Add(pixels);
-                }
-            }
-            return data;
-        }
-
-        private static async Task ReadImageDataAsync(string fileName, StreamReader data)
-        {
-            using (var fs = new FileStream(fileName, FileMode.Open))
-            {
-                var magicNumber = ReadLine(fs);
-                var numberOfImages = ReadLine(fs);
-                var numberOfRows = ReadLine(fs);
-                var numberOfColumns = ReadLine(fs);
-
-                var writer = new StreamWriter(data.BaseStream);
-
-                for (int i = 0; i < numberOfImages; i++)
-                {
-                    var numberOfPixels = numberOfRows * numberOfColumns;
-                    var line = new string[numberOfPixels];
-                    for (int j = 0; j < numberOfPixels; j++)
-                    {
-                        var pixel = fs.ReadByte();
-                        var inputData = pixel / 255.0d;
-                        line[j] = inputData.ToString();
-                    }
-
-                    await writer.WriteLineAsync(String.Join(" ", line));
-                }
-
-                data.BaseStream.Seek(0, SeekOrigin.Begin);
+                data.Add(trainSymbol);
+                labels.Add(trainClass);
             }
         }
 
-        private static List<int> ReadLabelsData(string fileName)
+        private static int GetClass(string label, Dictionary<string, int> labelRepresentations, ref int? lastUsedClass)
         {
-            var labels = new List<int>();
-
-            using (var fs = new FileStream(fileName, FileMode.Open))
+            int labelClass;
+            if (labelRepresentations.TryGetValue(label, out labelClass))
             {
-                var magicNumber = ReadLine(fs);
-                var numberOfItems = ReadLine(fs);
-
-                for (int i = 0; i < numberOfItems; i++)
-                {
-                    var label = fs.ReadByte();
-                    labels.Add(label);
-                }
+                return labelClass;
             }
+            else
+            {
+                if (!lastUsedClass.HasValue)
+                {
+                    throw new ArgumentException("There is no such label in the label representations.");
+                }
 
-            return labels;
+                labelClass = lastUsedClass.Value + 1;
+                lastUsedClass++;
+                return labelClass;
+            }
         }
 
-        private static async Task ReadLabelsDataAsync(string fileName, StreamReader data)
+        private static string GetLabel(int labelClass, Dictionary<string, int> labelRepresentations)
         {
-            var writer = new StreamWriter(data.BaseStream);
-
-            using (var fs = new FileStream(fileName, FileMode.Open))
-            {
-                var magicNumber = ReadLine(fs);
-                var numberOfItems = ReadLine(fs);
-
-                for (int i = 0; i < numberOfItems; i++)
-                {
-                    var label = fs.ReadByte();
-                    await writer.WriteLineAsync(label.ToString());
-                }
-            }
-
-            data.BaseStream.Seek(0, SeekOrigin.Begin);
+            return labelRepresentations.FirstOrDefault(kv => kv.Value == labelClass).Key;
         }
 
-        private static int ReadLine(FileStream fs)
+        private static IEnumerable<double> GetTrainSymbol(string file, out string label)
         {
-            return (fs.ReadByte() << 24) | (fs.ReadByte() << 16) | (fs.ReadByte() << 8) | fs.ReadByte();
+            using (var sr = new StreamReader(file))
+            {
+                label = sr.ReadLine();
+                var content = sr.ReadToEnd();
+                var attributes = content.Split(
+                    new string[] { Environment.NewLine, " " },
+                    StringSplitOptions.RemoveEmptyEntries)
+                    .Select(c => double.Parse(c));
+
+                return attributes;
+            }
         }
     }
 }
