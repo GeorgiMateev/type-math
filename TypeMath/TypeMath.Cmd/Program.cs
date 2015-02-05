@@ -16,10 +16,13 @@ namespace TypeMath.Cmd
             //var iris = new IrisData();
             //iris.Learn();
 
-            var mnist = new MnistData();
-            Task task = new Task(mnist.Learn);
-            task.Start();
-            task.Wait();
+            //var mnist = new MnistData();
+            //Task task = new Task(mnist.Learn);
+            //task.Start();
+            //task.Wait();
+
+            var crohme = new CrohmeData();
+            crohme.Learn();
         }        
     }
 }

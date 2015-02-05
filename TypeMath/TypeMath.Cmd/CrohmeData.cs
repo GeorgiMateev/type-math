@@ -24,9 +24,9 @@ namespace TypeMath.Cmd
             List<int> trainLabels;
             GetData(trainDataFolder, out trainData, out trainLabels,  labelRepresentations, ref lastUsedClass);
             
-            var hiddenLayerNeurons = 300;
-            var iterations = 2;
-            var learningConst = 0.5;
+            var hiddenLayerNeurons = 10;
+            var iterations = 5;
+            var learningConst = 0.1;
 
             var inputNeurons = trainData[0].Count();
             var outputNeurons = lastUsedClass.Value + 1;
@@ -115,6 +115,7 @@ namespace TypeMath.Cmd
 
                 labelClass = lastUsedClass.Value + 1;
                 lastUsedClass++;
+                labelRepresentations.Add(label, lastUsedClass.Value);
                 return labelClass;
             }
         }
